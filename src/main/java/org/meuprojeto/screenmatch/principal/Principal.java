@@ -1,5 +1,6 @@
 package org.meuprojeto.screenmatch.principal;
 
+import org.meuprojeto.screenmatch.model.Categoria;
 import org.meuprojeto.screenmatch.model.DadosSerie;
 import org.meuprojeto.screenmatch.model.DadosTemporada;
 import org.meuprojeto.screenmatch.model.Episodio;
@@ -22,7 +23,6 @@ public class Principal {
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
     private final String API_KEY = "&apikey=" + System.getenv("API_KEY");
 
-    private List<Serie> series = new ArrayList<>();
     private final SerieRepository repositorio;
 
     public Principal(SerieRepository repositorio) {
@@ -36,6 +36,11 @@ public class Principal {
                     1 - Buscar séries
                     2 - Buscar episódios
                     3 - Listar séries buscadas
+                    4 - Buscar série por título
+                    5 - Buscar séries por ator
+                    6 - Top 5 séries
+                    7 - Buscar séries por categoria
+                    8 - Filtrar séries
                     
                     0 - Sair
                     """;
@@ -48,6 +53,11 @@ public class Principal {
                 case 1 -> buscarSerieWeb();
                 case 2 -> buscarEpisodioPorSerie();
                 case 3 -> listarSeriesBuscadas();
+                case 4 -> buscarSeriePorTitulo();
+                case 5 -> buscarSeriesPorAtor();
+                case 6 -> buscarTop5Series();
+                case 7 -> buscarSeriesPorCategoria();
+                case 8 -> filtrarSeriesPorTemporadaEAvaliacao();
 
                 case 0 -> System.out.println("Saindo...");
                 default -> System.out.println("Opção inválida");
@@ -76,10 +86,7 @@ public class Principal {
         listarSeriesBuscadas();
         System.out.print("Digite o nome da série: ");
         String nomeSerie = scanner.nextLine();
-
-        Optional<Serie> serie = series.stream()
-                .filter(s -> s.getTitulo().toLowerCase().contains(nomeSerie.toLowerCase()))
-                .findFirst();
+        Optional<Serie> serie = repositorio.findByTituloContainingIgnoreCase(nomeSerie);
 
         if (serie.isPresent()) {
             Serie serieEncontrada = serie.get();
@@ -106,9 +113,65 @@ public class Principal {
     }
 
     private void listarSeriesBuscadas() {
-        series = repositorio.findAll();
+        List<Serie> series = repositorio.findAll();
         series.stream()
                 .sorted(Comparator.comparing(Serie::getGenero))
                 .forEach(System.out::println);
+    }
+
+    private void buscarSeriePorTitulo() {
+        System.out.print("Digite o nome da série: ");
+        String nomeSerie = scanner.nextLine();
+        Optional<Serie> serieBuscada = repositorio.findByTituloContainingIgnoreCase(nomeSerie);
+
+        if (serieBuscada.isPresent()) {
+            System.out.println("Dados da série: " + serieBuscada.get().getTitulo());
+        } else {
+            System.out.println("Série não encontrada!");
+        }
+    }
+
+    private void buscarSeriesPorAtor() {
+        System.out.print("Digite o nome do ator: ");
+        String nomeAtor = scanner.nextLine();
+        System.out.print("Digite o valor da avaliação da série: ");
+        double avaliacao = scanner.nextDouble();
+
+        List<Serie> seriesEncontradas = repositorio.findByAtoresContainingIgnoreCaseAndAvaliacaoGreaterThanEqual(nomeAtor, avaliacao);
+        System.out.printf("Séries em que o ator %s trabalhou:%n", nomeAtor);
+        seriesEncontradas.forEach(s ->
+                System.out.printf("%s | avaliação: %.2f%n%n", s.getTitulo(), s.getAvaliacao())
+        );
+    }
+
+    private void buscarTop5Series() {
+        List<Serie> top5Series = repositorio.findTop5ByOrderByAvaliacaoDesc();
+        top5Series.forEach(s ->
+                System.out.printf("%s | avaliação: %.2f%n", s.getTitulo(), s.getAvaliacao()));
+    }
+
+    private void buscarSeriesPorCategoria() {
+        System.out.print("Digite o nome do categoria: ");
+        String nomeCategoria = scanner.nextLine();
+
+        Categoria categoria = Categoria.fromPortugues(nomeCategoria);
+        List<Serie> seriesPorCategoria = repositorio.findByGenero(categoria);
+        System.out.println("Séries da categoria: " + nomeCategoria);
+        seriesPorCategoria.forEach(System.out::println);
+    }
+
+    private void filtrarSeriesPorTemporadaEAvaliacao() {
+        System.out.print("Digite a quantidade de temporadas: ");
+        int totalTemporadas = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("Digite o valor da avaliação: ");
+        double avaliacao = scanner.nextDouble();
+        scanner.nextLine();
+
+        List<Serie> seriesFiltradas = repositorio.findByTotalTemporadasLessThanEqualAndAvaliacaoGreaterThanEqual(totalTemporadas, avaliacao);
+        System.out.println("Séries filtradas");
+        seriesFiltradas.forEach(s ->
+                System.out.printf("%s | avaliação: %.2f%n", s.getTitulo(), s.getAvaliacao()));
     }
 }
