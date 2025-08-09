@@ -3,6 +3,7 @@ package org.meuprojeto.screenmatch.principal;
 import org.meuprojeto.screenmatch.model.DadosSerie;
 import org.meuprojeto.screenmatch.model.DadosTemporada;
 import org.meuprojeto.screenmatch.model.Serie;
+import org.meuprojeto.screenmatch.repository.SerieRepository;
 import org.meuprojeto.screenmatch.service.ConsumoAPI;
 import org.meuprojeto.screenmatch.service.ConverteDados;
 
@@ -19,7 +20,11 @@ public class Principal {
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
     private final String API_KEY = "&apikey=" + System.getenv("API_KEY");
 
-    private final List<DadosSerie> dadosSerie = new ArrayList<>();
+    private final SerieRepository repositorio;
+
+    public Principal(SerieRepository repositorio) {
+        this.repositorio = repositorio;
+    }
 
     public void exibeMenu() {
         int opcao = -1;
@@ -49,7 +54,9 @@ public class Principal {
 
     private void buscarSerieWeb() {
         DadosSerie dados = getDadosSerie();
-        dadosSerie.add(dados);
+        Serie serie = new Serie(dados);
+        repositorio.save(serie);
+        System.out.printf("A série %s foi salva no banco de dados!%n", serie.getTitulo());
         System.out.println(dados);
     }
 
@@ -75,9 +82,7 @@ public class Principal {
     }
 
     private void listarSeriesBuscadas() {
-        List<Serie> series = dadosSerie.stream()
-                .map(Serie::new)
-                .toList();
+        List<Serie> series = repositorio.findAll();
 
         series.stream()
                 .sorted(Comparator.comparing(Serie::getGenero))
