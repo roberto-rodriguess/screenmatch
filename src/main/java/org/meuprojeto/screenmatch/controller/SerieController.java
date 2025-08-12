@@ -1,5 +1,6 @@
 package org.meuprojeto.screenmatch.controller;
 
+import org.meuprojeto.screenmatch.dto.DadosListagemEpisodio;
 import org.meuprojeto.screenmatch.dto.DadosListagemSerie;
 import org.meuprojeto.screenmatch.service.SerieService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,5 +39,20 @@ public class SerieController {
     @GetMapping("/{id}")
     public DadosListagemSerie obterSeriePorId(@PathVariable Long id) {
         return serieService.obterSeriePorId(id);
+    }
+
+    @GetMapping("/{id}/temporadas/todas")
+    public List<DadosListagemEpisodio> obterTodasAsTemporadas(@PathVariable Long id) {
+        return serieService.obterTodasAsTemporadas(id);
+    }
+
+    @GetMapping("/{id}/temporadas/{numero}")
+    public List<DadosListagemEpisodio> obterTemporadasPorNumero(@PathVariable Long id, @PathVariable Integer numero) {
+        return serieService.obterTemporadasPorNumero(id, numero);
+    }
+
+    @GetMapping("/categoria/{nomeCategoria}")
+    public List<DadosListagemSerie> obterSeriesPorCategoria(@PathVariable String nomeCategoria) {
+        return serieService.obterSeriesPorCategoria(nomeCategoria);
     }
 }

@@ -1,6 +1,8 @@
 package org.meuprojeto.screenmatch.service;
 
+import org.meuprojeto.screenmatch.dto.DadosListagemEpisodio;
 import org.meuprojeto.screenmatch.dto.DadosListagemSerie;
+import org.meuprojeto.screenmatch.model.Categoria;
 import org.meuprojeto.screenmatch.model.Serie;
 import org.meuprojeto.screenmatch.repository.SerieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,28 @@ public class SerieService {
     public DadosListagemSerie obterSeriePorId(Long id) {
         Optional<Serie> serie = repository.findById(id);
         return serie.map(DadosListagemSerie::new).orElse(null);
+    }
+
+    public List<DadosListagemEpisodio> obterTodasAsTemporadas(Long id) {
+        Optional<Serie> serie = repository.findById(id);
+        if (serie.isPresent()) {
+            Serie serieBuscada = serie.get();
+            return serieBuscada.getEpisodios().stream()
+                    .map(DadosListagemEpisodio::new)
+                    .toList();
+        }
+        return null;
+    }
+
+    public List<DadosListagemEpisodio> obterTemporadasPorNumero(Long id, Integer numero) {
+        return repository.obterEpisodiosPorTemporada(id, numero).stream()
+                .map(DadosListagemEpisodio::new)
+                .toList();
+    }
+
+    public List<DadosListagemSerie> obterSeriesPorCategoria(String nomeCategoria) {
+        Categoria categoria = Categoria.fromPortugues(nomeCategoria);
+        return converteDados(repository.findByGenero(categoria));
     }
 
     private List<DadosListagemSerie> converteDados(List<Serie> series) {

@@ -85,4 +85,16 @@ public interface SerieRepository extends JpaRepository<Serie, Long> {
             limit 5
             """)
     List<Serie> encontrarEpisodiosMaisRecentes();
+
+    @Query("""
+            select
+                e
+            from
+                Serie s
+            join
+                s.episodios e
+            where
+                s.id = :id and e.temporada = :numero
+            """)
+    List<Episodio> obterEpisodiosPorTemporada(Long id, Integer numero);
 }
